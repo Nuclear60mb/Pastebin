@@ -10,8 +10,8 @@ class PostService:
     def __init__(self, repo: PostRepository):
         self.repo = repo
 
-    async def create_post(self, post_data: PostCreate) -> PostResponse:
-        return await self.repo.create_post(post_data)
+    async def create_post(self, post_data: PostCreate, user_id: UUID) -> PostResponse:
+        return await self.repo.create_post(post_data, user_id)
 
     async def get_post_by_id(self, post_id: UUID) -> PostResponse:
         return await self.repo.get_post_by_id(post_id)

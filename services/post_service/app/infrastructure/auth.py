@@ -1,28 +1,14 @@
 import os
-
-from jose import jwt
-from dotenv import load_dotenv
-from fastapi import Request, HTTPException
-from datetime import datetime
+import httpx
 from uuid import UUID
-
-
+from dotenv import load_dotenv
 load_dotenv()
 
-secret_key = os.getenv("JWT_SECRET_KEY")
-algorithm = os.getenv("ALGORITHM")
 
+auth_url = os.getenv("VALIDATE_TOKEN_URL")
 
-def get_user_id_from_token(request: Request) -> str:
-    token = request.cookies.get("access_token")
-    payload = jwt.decode(token, secret_key, algorithms=[algorithm])
-
-    user_id = payload.get("user_id")
-    exp = payload.get("exp")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="User ID not found")
-    if exp and datetime.fromtimestamp(exp) < datetime.now():
-        raise HTTPException(status_code=401, detail="Token has expired")
-    
-    return UUID(user_id)
+async def validate_token(token: str) -> str:
+    headers = {"Authorization": f"Bearer {token}"}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(auth_url, headers=headers)
+    return UUID(response.text.strip('"'))

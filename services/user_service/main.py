@@ -1,5 +1,3 @@
-# import uvicorn
-
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
@@ -7,6 +5,7 @@ from fastapi import FastAPI
 from app.database.database import create_database
 from app.schemas.user_schemas import UserCreate, UserRead, UserUpdate
 from app.services.user_manager import auth_backend, fastapi_users
+from app.api.routes import router
 
 
 @asynccontextmanager
@@ -56,6 +55,6 @@ app.include_router(
     tags=["users"],
 )
 
-
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+app.include_router(
+    router, prefix="/verify", tags=["verify"]
+)
