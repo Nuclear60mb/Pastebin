@@ -9,11 +9,26 @@ services:
     volumes:
       - ./user_service:/app
     working_dir: /app
+    depends_on:
+      - postgres_users
     ports:
       - "8000:8000"   
     env_file:
     - user_service/.env
+    networks:
+      - pastebin_network
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  postgres_users:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user_service_user
+      POSTGRES_PASSWORD: user_service_user_pw
+      POSTGRES_DB: user_service_db
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    networks:
+      - pastebin_network
 
   post_service:
     build:
@@ -27,4 +42,55 @@ services:
      - post_service/.env
     ports:
       - "8001:8001"
+    depends_on:
+      - postgres_posts
+    networks:
+      - pastebin_network
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+  postgres_posts:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: post_service_user
+      POSTGRES_PASSWORD: post_service_user_pw
+      POSTGRES_DB: post_service_db
+    volumes:
+      - posts_data:/var/lib/postgresql/data
+    networks:
+      - pastebin_network
+
+  hash_service:
+    build:
+      context: ./hash_service
+      dockerfile: Dockerfile
+    container_name: hash_service
+    environment:
+      - REDIS_HOST=redis_server_for_hashes
+      - REDIS_PORT=6379
+    volumes:
+      - ./hash_service:/app
+    working_dir: /app
+    ports:
+      - "8002:8002"
+    networks:
+      - pastebin_network
+    command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+
+  redis_server_for_hashes:
+    image: redis:latest
+    container_name: redis_server_for_hashes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pastebin_network
+
+volumes:
+  redis_data:
+  users_data:
+  posts_data:
+
+networks:
+  pastebin_network:
+    driver: bridge
