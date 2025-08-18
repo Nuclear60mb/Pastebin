@@ -33,6 +33,11 @@ class Post(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())")
     )
+
+    unique_hash: Mapped[str] = mapped_column(
+        String(64), unique=True, index=False, nullable=False
+    )
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("TIMEZONE('utc', now())"),

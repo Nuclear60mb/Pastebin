@@ -8,22 +8,45 @@ from app.schemas.post_schemas import (
     PostUpdate,
     PostCreate,
     PostResponse,
+    PostResponseWithURL,
     PaginatedPostsResponse,
 )
 from app.services.post_service import PostService
 from app.dependencies import get_post_service
-from app.infrastructure.auth import validate_token
+from app.infrastructure.api_requests import validate_token
+from app.core.config import BASE_URL
 
 
 router = APIRouter()
 bearer_scheme = HTTPBearer(auto_error=True)
 
 
+def build_post_response(post) -> PostResponseWithURL:
+    return PostResponseWithURL(
+        id=post.id,
+        title=post.title,
+        content=post.content,
+        author_id=post.author_id,
+        short_url=f"{BASE_URL}/{post.unique_hash}",
+        created_at=post.created_at,
+        updated_at=post.updated_at,
+    )
+
+
 @router.get("/user_post/{post_id}", response_model=PostResponse)
-async def get_user_post(
+async def get_post_by_id(
     post_id: UUID, service: PostService = Depends(get_post_service)
 ):
     return await service.get_post_by_id(post_id)
+
+@router.get("/user_post_hash/{post_hash}", response_model=PostResponse)
+async def get_post_by_hash(
+    post_hash: str, service: PostService = Depends(get_post_service)
+):
+    post = await service.get_post_by_hash(post_hash)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return post
 
 
 @router.get("/", response_model=PaginatedPostsResponse)
@@ -51,7 +74,7 @@ async def get_user_posts(
     return await service.get_user_posts(user_id)
 
 
-@router.post("/create_post", response_model=PostResponse)
+@router.post("/create_post", response_model=PostResponseWithURL)
 async def create_post(
     post_data: PostCreate,
     creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -60,7 +83,9 @@ async def create_post(
     token = creds.credentials
     user_id = await validate_token(token)
 
-    return await service.create_post(post_data, user_id)
+    post = await service.create_post(post_data, user_id)
+
+    return build_post_response(post)
 
 
 @router.put("/update_post/{post_id}", response_model=PostResponse)

@@ -15,6 +15,9 @@ class PostService:
 
     async def get_post_by_id(self, post_id: UUID) -> PostResponse:
         return await self.repo.get_post_by_id(post_id)
+    
+    async def get_post_by_hash(self, post_hash: str) -> PostResponse | None:
+        return await self.repo.get_post_by_hash(post_hash)
 
     async def get_all_posts(self, offset: int, limit: int) -> List[PostResponse]:
         return await self.repo.get_all_posts(offset, limit)

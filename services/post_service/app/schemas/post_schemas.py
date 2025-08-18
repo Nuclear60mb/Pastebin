@@ -25,6 +25,8 @@ class PostResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PostResponseWithURL(PostResponse):
+    short_url: str
 
 class PaginatedPostsResponse(BaseModel):
     items: list[PostResponse]

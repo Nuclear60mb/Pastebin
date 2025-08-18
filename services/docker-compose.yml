@@ -12,7 +12,7 @@ services:
     depends_on:
       - postgres_users
     ports:
-      - "8000:8000"   
+      - "8001:8000"   
     env_file:
     - user_service/.env
     networks:
@@ -41,12 +41,12 @@ services:
     env_file:
      - post_service/.env
     ports:
-      - "8001:8001"
+      - "8002:8000"
     depends_on:
       - postgres_posts
     networks:
       - pastebin_network
-    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   postgres_posts:
     image: postgres:15
@@ -71,10 +71,10 @@ services:
       - ./hash_service:/app
     working_dir: /app
     ports:
-      - "8002:8002"
+      - "8003:8000"
     networks:
       - pastebin_network
-    command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   redis_server_for_hashes:
     image: redis:latest
